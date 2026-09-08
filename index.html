@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,8 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header class="topbar"><a class="brand" href="#dashboard">Restaurant<span>Inventory</span></a><nav><a href="#inventory">Inventory</a><a href="#recipes">Recipes</a><a href="#purchases">Purchases</a></nav><button class="ghost" id="resetButton">Reset demo</button></header>
+  
   <main>
     <section class="hero" id="dashboard"><div><p class="eyebrow">BACK-OF-HOUSE, SIMPLIFIED</p><h1>Know what’s in your kitchen.</h1><p class="subcopy">Track stock, cost dishes, and record supplier deliveries—all in one small workspace.</p></div><div class="hero-mark">✦</div></section>
     <section class="metrics" aria-label="Inventory overview"><article><span>Inventory value</span><strong id="inventoryValue">$0.00</strong><small>Current on-hand stock</small></article><article><span>Low-stock items</span><strong id="lowStockCount">0</strong><small>Needs attention today</small></article><article><span>Recipe food cost</span><strong id="averageFoodCost">0%</strong><small>Average across menu</small></article><article><span>Purchases this month</span><strong id="purchaseTotal">$0.00</strong><small>Supplier invoices logged</small></article></section>
@@ -23,10 +26,14 @@
       <aside class="assistant-card"><div class="assistant-heading"><span class="spark">✦</span><div><p class="eyebrow">INVENTORY ASSISTANT</p><h2>Kitchen assistant</h2></div></div><p>Ask it to update stock or find cost information. Actions happen locally in this browser.</p><div class="suggestions"><button data-prompt="show low stock">Show low stock</button><button data-prompt="calculate cost of chicken bowl">Cost chicken bowl</button><button data-prompt="add 5 lb tomatoes at 2.50">Add tomatoes</button></div><div class="chat-log" id="chatLog" aria-live="polite"><div class="bot-message">Hi! I can add inventory, record purchases, show low stock, and calculate recipe costs.</div></div><form id="assistantForm"><input id="assistantInput" aria-label="Ask the assistant" placeholder="Try: show low stock" autocomplete="off" /><button class="send" aria-label="Send request">↑</button></form><details><summary>Supported commands</summary><ul><li>“show low stock”</li><li>“calculate cost of chicken bowl”</li><li>“add 5 lb tomatoes at 2.50”</li><li>“record purchase 10 lb rice at 1.20 from Fresh Farms”</li></ul></details></aside>
     </section>
   </main>
+
   <dialog id="inventoryDialog"><form method="dialog" id="inventoryForm"><div class="modal-head"><h2>Add inventory item</h2><button class="close" value="cancel">×</button></div><label>Ingredient<input name="name" required placeholder="e.g. Basil" /></label><div class="form-grid"><label>Quantity<input name="quantity" type="number" min="0" step="0.01" required /></label><label>Unit<input name="unit" required placeholder="lb" /></label><label>Cost per unit ($)<input name="cost" type="number" min="0" step="0.01" required /></label><label>Low-stock at<input name="threshold" type="number" min="0" step="0.01" required /></label></div><button class="primary full" value="default">Save item</button></form></dialog>
-  <dialog id="recipeDialog"><form method="dialog" id="recipeForm"><div class="modal-head"><h2>Add recipe</h2><button class="close" value="cancel">×</button></div><label>Recipe name<input name="name" required placeholder="e.g. Tomato pasta" /></label><div class="form-grid"><label>Menu price ($)<input name="price" type="number" min="0" step="0.01" required /></label><label>Ingredients (comma separated)<input name="ingredients" required placeholder="tomatoes:2, rice:0.5" /></label></div><p class="help">Use exact inventory names and quantities, e.g. <code>chicken:0.5, rice:0.3</code>.</p><button class="primary full" value="default">Save recipe</button></form></dialog>
+  <dialog id="recipeDialog"><form method="dialog" id="recipeForm"><div class="modal-head"><h2>Add recipe</h2><button class="close" value="cancel">×</button></div><label>Recipe name<input name="name" required placeholder="e.g. Fried chicken" /></label><div class="form-grid"><label>Menu price ($)<input name="price" type="number" min="0" step="0.01" required /></label><label>Ingredients (comma separated)<input name="ingredients" required placeholder="Chicken breast:0.5, Butter:0.1" /></label></div><p class="help">First add each ingredient to Inventory Counts. Then use <code>Inventory item name:quantity</code>, separated by commas. Example: <code>Chicken breast:0.5, Butter:0.1, Flour:0.2</code>.</p><button class="primary full" value="default">Save recipe</button></form></dialog>
   <dialog id="purchaseDialog"><form method="dialog" id="purchaseForm"><div class="modal-head"><h2>Record supplier purchase</h2><button class="close" value="cancel">×</button></div><label>Ingredient<select name="item" id="purchaseItem" required></select></label><div class="form-grid"><label>Quantity received<input name="quantity" type="number" min="0.01" step="0.01" required /></label><label>Cost per unit ($)<input name="cost" type="number" min="0" step="0.01" required /></label></div><label>Supplier<input name="supplier" required placeholder="e.g. Fresh Farms" /></label><button class="primary full" value="default">Save purchase</button></form></dialog>
   <template id="emptyTemplate"><p class="empty">Nothing here yet.</p></template>
   <script src="script.js"></script>
+
+
 </body>
+
 </html>
