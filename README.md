@@ -32,9 +32,9 @@ Example assistant requests:
 
 This project was informed by the product scope of [OpenKitchen](https://github.com/clawnify/OpenKitchen), an open-source restaurant back-of-house application that includes restaurant inventory, food-cost, and purchasing-related workflows.
 
-**No OpenKitchen source code was copied, adapted, or incorporated.** PantryPilot is an independently written, intentionally smaller course project using plain HTML, CSS, and JavaScript.
+**No OpenKitchen source code was copied, adapted, or incorporated.** Restaurant-Inventory is an independently written, intentionally smaller course project built with plain HTML, CSS, and JavaScript.
 
-ChatGPT was used as an AI development assistant to help plan and generate this original educational project. The in-app “Pantry Pilot AI” is not a hosted AI model; it is a transparent local rule-based command parser, so it works offline and does not send user data anywhere.
+ChatGPT was used as an AI development assistant to help plan and generate this original educational project. The in-app Inventory Assistant is not a hosted AI model; it is a transparent, local rule-based command parser that works offline and does not send user data anywhere.
 
 ## Limits
 
