@@ -28,7 +28,108 @@
   </main>
 
   <dialog id="inventoryDialog"><form method="dialog" id="inventoryForm"><div class="modal-head"><h2>Add inventory item</h2><button class="close" value="cancel">×</button></div><label>Ingredient<input name="name" required placeholder="e.g. Basil" /></label><div class="form-grid"><label>Quantity<input name="quantity" type="number" min="0" step="0.01" required /></label><label>Unit<input name="unit" required placeholder="lb" /></label><label>Cost per unit ($)<input name="cost" type="number" min="0" step="0.01" required /></label><label>Low-stock at<input name="threshold" type="number" min="0" step="0.01" required /></label></div><button class="primary full" value="default">Save item</button></form></dialog>
-  <dialog id="recipeDialog"><form method="dialog" id="recipeForm"><div class="modal-head"><h2>Add recipe</h2><button class="close" value="cancel">×</button></div><label>Recipe name<input name="name" required placeholder="e.g. Fried chicken" /></label><div class="form-grid"><label>Menu price ($)<input name="price" type="number" min="0" step="0.01" required /></label><label>Ingredients (comma separated)<input name="ingredients" required placeholder="Chicken breast:0.5, Butter:0.1" /></label></div><p class="help">First add each ingredient to Inventory Counts. Then use <code>Inventory item name:quantity</code>, separated by commas. Example: <code>Chicken breast:0.5, Butter:0.1, Flour:0.2</code>.</p><button class="primary full" value="default">Save recipe</button></form></dialog>
+  <!-- Add Inventory Item -->
+<dialog id="inventoryDialog">
+  <form method="dialog" id="inventoryForm">
+    <div class="modal-head">
+      <h2>Add inventory item</h2>
+      <button class="close" value="cancel">×</button>
+    </div>
+
+    <label>
+      Ingredient
+      <input name="name" required placeholder="e.g. Basil" />
+    </label>
+
+    <div class="form-grid">
+      <label>
+        Quantity
+        <input name="quantity" type="number" min="0" step="0.01" required />
+      </label>
+
+      <label>
+        Unit
+        <input name="unit" required placeholder="lb" />
+      </label>
+
+      <label>
+        Cost per unit ($)
+        <input name="cost" type="number" min="0" step="0.01" required />
+      </label>
+
+      <label>
+        Low-stock at
+        <input name="threshold" type="number" min="0" step="0.01" required />
+      </label>
+    </div>
+
+    <button class="primary full" value="default">Save item</button>
+  </form>
+</dialog>
+
+
+<!-- Edit Inventory Item -->
+<dialog id="editInventoryDialog">
+  <form method="dialog" id="editInventoryForm">
+    <div class="modal-head">
+      <h2>Edit inventory item</h2>
+      <button class="close" value="cancel">×</button>
+    </div>
+
+    <!-- Stores the ID of the item being edited -->
+    <input type="hidden" name="id" />
+
+    <label>
+      Ingredient
+      <input name="name" required />
+    </label>
+
+    <div class="form-grid">
+      <label>
+        Quantity
+        <input
+          name="quantity"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+        />
+      </label>
+
+      <label>
+        Unit
+        <input name="unit" required />
+      </label>
+
+      <label>
+        Cost per unit ($)
+        <input
+          name="cost"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+        />
+      </label>
+
+      <label>
+        Low-stock at
+        <input
+          name="threshold"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+        />
+      </label>
+    </div>
+
+    <button class="primary full" value="default">
+      Save changes
+    </button>
+  </form>
+</dialog>
+<dialog id="recipeDialog"><form method="dialog" id="recipeForm"><div class="modal-head"><h2>Add recipe</h2><button class="close" value="cancel">×</button></div><label>Recipe name<input name="name" required placeholder="e.g. Fried chicken" /></label><div class="form-grid"><label>Menu price ($)<input name="price" type="number" min="0" step="0.01" required /></label><label>Ingredients (comma separated)<input name="ingredients" required placeholder="Chicken breast:0.5, Butter:0.1" /></label></div><p class="help">First add each ingredient to Inventory Counts. Then use <code>Inventory item name:quantity</code>, separated by commas. Example: <code>Chicken breast:0.5, Butter:0.1, Flour:0.2</code>.</p><button class="primary full" value="default">Save recipe</button></form></dialog>
   <dialog id="purchaseDialog"><form method="dialog" id="purchaseForm"><div class="modal-head"><h2>Record supplier purchase</h2><button class="close" value="cancel">×</button></div><label>Ingredient<select name="item" id="purchaseItem" required></select></label><div class="form-grid"><label>Quantity received<input name="quantity" type="number" min="0.01" step="0.01" required /></label><label>Cost per unit ($)<input name="cost" type="number" min="0" step="0.01" required /></label></div><label>Supplier<input name="supplier" required placeholder="e.g. Fresh Farms" /></label><button class="primary full" value="default">Save purchase</button></form></dialog>
   <template id="emptyTemplate"><p class="empty">Nothing here yet.</p></template>
   <script src="script.js"></script>
