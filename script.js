@@ -1,3 +1,4 @@
+//
 const seed = {
   inventory: [
     {
