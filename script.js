@@ -1,513 +1,931 @@
+//Expiry-Tracking Feature Added
 const seed = {
+
   inventory: [
+
     {
       id: 1,
       name: 'Chicken breast',
       quantity: 12,
       unit: 'lb',
       cost: 4.8,
-      threshold: 6
+      threshold: 6,
+      expiryDate: '2026-10-05'
     },
+
     {
       id: 2,
       name: 'Jasmine rice',
       quantity: 5,
       unit: 'lb',
       cost: 1.2,
-      threshold: 8
+      threshold: 8,
+      expiryDate: '2027-03-15'
     },
+
     {
       id: 3,
       name: 'Tomatoes',
       quantity: 10,
       unit: 'lb',
       cost: 2.5,
-      threshold: 5
+      threshold: 5,
+      expiryDate: '2026-10-02'
     },
+
     {
       id: 4,
       name: 'Avocado',
       quantity: 7,
       unit: 'each',
       cost: 1.4,
-      threshold: 4
+      threshold: 4,
+      expiryDate: '2026-10-01'
     },
+
     {
       id: 5,
       name: 'Limes',
       quantity: 20,
       unit: 'each',
       cost: 0.35,
-      threshold: 12
+      threshold: 12,
+      expiryDate: '2026-10-10'
     }
+
   ],
 
+
   recipes: [
+
     {
       id: 1,
       name: 'Chicken Rice Bowl',
       price: 14,
+
       ingredients: [
-        { name: 'Chicken breast', qty: 0.5 },
-        { name: 'Jasmine rice', qty: 0.3 },
-        { name: 'Tomatoes', qty: 0.15 },
-        { name: 'Avocado', qty: 0.25 }
+        {
+          name: 'Chicken breast',
+          qty: 0.5
+        },
+        {
+          name: 'Jasmine rice',
+          qty: 0.3
+        },
+        {
+          name: 'Tomatoes',
+          qty: 0.15
+        },
+        {
+          name: 'Avocado',
+          qty: 0.25
+        }
       ]
     },
+
     {
       id: 2,
       name: 'Tomato Rice Bowl',
       price: 11,
+
       ingredients: [
-        { name: 'Jasmine rice', qty: 0.35 },
-        { name: 'Tomatoes', qty: 0.5 },
-        { name: 'Avocado', qty: 0.25 },
-        { name: 'Limes', qty: 1 }
+        {
+          name: 'Jasmine rice',
+          qty: 0.35
+        },
+        {
+          name: 'Tomatoes',
+          qty: 0.5
+        },
+        {
+          name: 'Avocado',
+          qty: 0.25
+        },
+        {
+          name: 'Limes',
+          qty: 1
+        }
       ]
     }
+
   ],
 
+
   purchases: [
+
     {
       id: 1,
-      date: new Date().toISOString().slice(0, 10),
+
+      date:
+        new Date()
+          .toISOString()
+          .slice(0, 10),
+
       item: 'Chicken breast',
+
       quantity: 8,
+
       cost: 4.6,
+
       supplier: 'Fresh Fields'
     }
+
   ]
+
 };
 
 
-// -------------------------
-// APP STATE
-// -------------------------
+// ======================================
+// STATE
+// ======================================
 
 let state =
-  JSON.parse(localStorage.getItem('pantryPilotData')) ||
-  structuredClone(seed);
+  JSON.parse(
+    localStorage.getItem(
+      'pantryPilotData'
+    )
+  ) || structuredClone(seed);
+
 
 let activeFilter = 'all';
 
 
-// -------------------------
-// HELPER FUNCTIONS
-// -------------------------
+// ======================================
+// HELPERS
+// ======================================
 
-const money = n => `$${Number(n || 0).toFixed(2)}`;
+const money = number =>
+  `$${Number(number || 0).toFixed(2)}`;
+
 
 const save = () => {
+
   localStorage.setItem(
     'pantryPilotData',
     JSON.stringify(state)
   );
+
 };
 
+
 const findItem = name => {
+
   return state.inventory.find(
-    i => i.name.toLowerCase() === name.toLowerCase()
+    item =>
+      item.name.toLowerCase() ===
+      name.toLowerCase()
   );
+
 };
 
 
 function recipeCost(recipe) {
-  return recipe.ingredients.reduce((sum, part) => {
-    const item = findItem(part.name);
 
-    return sum + ((item?.cost || 0) * part.qty);
-  }, 0);
+  return recipe.ingredients.reduce(
+    (sum, part) =>
+
+      sum +
+      (
+        (
+          findItem(part.name)?.cost ||
+          0
+        ) *
+        part.qty
+      ),
+
+    0
+  );
+
 }
 
 
-// -------------------------
-// RENDER APPLICATION
-// -------------------------
+// ======================================
+// ISSUE #15
+// EXPIRY TRACKING
+// ======================================
 
-function render() {
+function getExpiryStatus(expiryDate) {
 
-  // Find low-stock items
-  const low = state.inventory.filter(
-    i => i.quantity <= i.threshold
+  // Old inventory data may not have
+  // an expiry date yet.
+  if (!expiryDate) {
+
+    return 'No expiry date';
+
+  }
+
+
+  const today = new Date();
+
+  today.setHours(
+    0,
+    0,
+    0,
+    0
   );
 
 
-  // Inventory value
-  document.querySelector('#inventoryValue').textContent =
-    money(
-      state.inventory.reduce(
-        (sum, i) => sum + i.quantity * i.cost,
-        0
-      )
+  const expiry =
+    new Date(
+      `${expiryDate}T00:00:00`
     );
 
 
-  // Low-stock count
-  document.querySelector('#lowStockCount').textContent =
-    low.length;
+  const millisecondsPerDay =
+    1000 * 60 * 60 * 24;
 
 
-  // Average recipe food cost
-  const avg = state.recipes.length
-    ? state.recipes.reduce(
-        (sum, r) =>
-          sum + recipeCost(r) / r.price * 100,
-        0
-      ) / state.recipes.length
-    : 0;
-
-  document.querySelector('#averageFoodCost').textContent =
-    `${avg.toFixed(1)}%`;
+  const daysLeft =
+    Math.ceil(
+      (expiry - today) /
+      millisecondsPerDay
+    );
 
 
-  // Monthly purchase total
-  const month = new Date()
-    .toISOString()
-    .slice(0, 7);
+  if (daysLeft < 0) {
 
-  document.querySelector('#purchaseTotal').textContent =
-    money(
-      state.purchases
-        .filter(p => p.date.startsWith(month))
-        .reduce(
-          (sum, p) => sum + p.quantity * p.cost,
+    return '⚠ Expired';
+
+  }
+
+
+  if (daysLeft === 0) {
+
+    return '⚠ Expires today';
+
+  }
+
+
+  if (daysLeft <= 3) {
+
+    return (
+      `⚠ Expires in ${daysLeft} ` +
+      `${daysLeft === 1 ? 'day' : 'days'}`
+    );
+
+  }
+
+
+  return expiryDate;
+
+}
+
+
+// ======================================
+// RENDER
+// ======================================
+
+function render() {
+
+
+  const low =
+    state.inventory.filter(
+      item =>
+        item.quantity <=
+        item.threshold
+    );
+
+
+  // INVENTORY VALUE
+
+  document
+    .querySelector(
+      '#inventoryValue'
+    )
+    .textContent =
+
+      money(
+        state.inventory.reduce(
+          (sum, item) =>
+            sum +
+            item.quantity *
+            item.cost,
+
           0
         )
-    );
+      );
 
 
-  // -------------------------
-  // INVENTORY TABLE
-  // -------------------------
+  // LOW STOCK
+
+  document
+    .querySelector(
+      '#lowStockCount'
+    )
+    .textContent =
+      low.length;
+
+
+  // AVERAGE FOOD COST
+
+  const avg =
+    state.recipes.length
+
+      ? state.recipes.reduce(
+          (sum, recipe) =>
+
+            sum +
+            recipeCost(recipe) /
+            recipe.price *
+            100,
+
+          0
+        ) /
+        state.recipes.length
+
+      : 0;
+
+
+  document
+    .querySelector(
+      '#averageFoodCost'
+    )
+    .textContent =
+      `${avg.toFixed(1)}%`;
+
+
+  // PURCHASE TOTAL
+
+  const month =
+    new Date()
+      .toISOString()
+      .slice(0, 7);
+
+
+  document
+    .querySelector(
+      '#purchaseTotal'
+    )
+    .textContent =
+
+      money(
+
+        state.purchases
+
+          .filter(
+            purchase =>
+              purchase.date
+                .startsWith(month)
+          )
+
+          .reduce(
+            (sum, purchase) =>
+
+              sum +
+              purchase.quantity *
+              purchase.cost,
+
+            0
+          )
+
+      );
+
+
+  // ====================================
+  // INVENTORY
+  // ====================================
 
   const query =
     document
-      .querySelector('#inventorySearch')
+      .querySelector(
+        '#inventorySearch'
+      )
       .value
       .toLowerCase();
 
 
-  const items = state.inventory.filter(i => {
-    const matchesFilter =
-      activeFilter === 'all' ||
-      i.quantity <= i.threshold;
+  const items =
+    state.inventory.filter(
+      item =>
 
-    const matchesSearch =
-      i.name.toLowerCase().includes(query);
+        (
+          activeFilter === 'all' ||
+          item.quantity <=
+            item.threshold
+        )
 
-    return matchesFilter && matchesSearch;
-  });
+        &&
 
+        item.name
+          .toLowerCase()
+          .includes(query)
 
-  document.querySelector('#inventoryRows').innerHTML =
-    items.map(i => `
-      <tr>
-
-        <td>
-          ${i.name}
-        </td>
-
-        <td>
-          ${i.quantity} ${i.unit}
-        </td>
-
-        <td>
-          ${money(i.cost)}
-        </td>
-
-        <td>
-          <span
-            class="badge ${
-              i.quantity <= i.threshold
-                ? 'low'
-                : ''
-            }"
-          >
-            ${
-              i.quantity <= i.threshold
-                ? 'Low stock'
-                : 'In stock'
-            }
-          </span>
-        </td>
-
-        <td>
-
-          <!-- EDIT BUTTON -->
-          <button
-            class="icon-button"
-            title="Edit ${i.name}"
-            data-edit="${i.id}"
-          >
-            Edit
-          </button>
-
-          <!-- DELETE BUTTON -->
-          <button
-            class="icon-button"
-            title="Delete ${i.name}"
-            data-delete="${i.id}"
-          >
-            ×
-          </button>
-
-        </td>
-
-      </tr>
-    `).join('') ||
-
-    `
-      <tr>
-        <td
-          colspan="5"
-          class="empty"
-        >
-          No matching ingredients.
-        </td>
-      </tr>
-    `;
+    );
 
 
-  // -------------------------
-  // RECIPE CARDS
-  // -------------------------
+  document
+    .querySelector(
+      '#inventoryRows'
+    )
+    .innerHTML =
 
-  document.querySelector('#recipeCards').innerHTML =
-    state.recipes.map(r => {
+      items.map(
+        item => `
 
-      const cost = recipeCost(r);
-      const food = cost / r.price * 100;
+          <tr>
 
-      return `
-        <article class="recipe">
-
-          <div class="recipe-title">
-
-            <h3>
-              ${r.name}
-            </h3>
-
-            <button
-              class="icon-button"
-              title="Remove ${r.name}"
-              data-delete-recipe="${r.id}"
-            >
-              ×
-            </button>
-
-          </div>
-
-          <span class="cost">
-            ${money(cost)}
-          </span>
-
-          <small>
-            per serving
-          </small>
-
-          <p>
-            Menu price ${money(r.price)}
-            · Food cost ${food.toFixed(1)}%
-          </p>
-
-          <div class="meter">
-            <i
-              style="width:${Math.min(food, 100)}%"
-            ></i>
-          </div>
-
-          <p>
-            ${
-              r.ingredients
-                .map(x =>
-                  `${x.qty} ${
-                    findItem(x.name)?.unit || ''
-                  } ${x.name}`
-                )
-                .join(' · ')
-            }
-          </p>
-
-        </article>
-      `;
-    }).join('') ||
-
-    `
-      <p class="empty">
-        No recipes yet.
-      </p>
-    `;
+            <td>
+              ${item.name}
+            </td>
 
 
-  // -------------------------
-  // PURCHASE HISTORY
-  // -------------------------
-
-  document.querySelector('#purchaseList').innerHTML =
-    state.purchases
-      .slice()
-      .reverse()
-      .map(p => `
-        <article class="purchase">
-
-          <span class="purchase-date">
-            ${p.date}
-          </span>
-
-          <div>
-
-            <b>
-              ${p.item}
-              ·
-              ${p.quantity}
-              ${findItem(p.item)?.unit || 'units'}
-            </b>
-
-            <small>
-              ${p.supplier}
-              ·
-              ${money(p.cost)}
-              per unit
-            </small>
-
-          </div>
-
-          <span class="amount">
-            ${money(p.quantity * p.cost)}
-          </span>
-
-        </article>
-      `).join('') ||
-
-    `
-      <p class="empty">
-        No purchases logged.
-      </p>
-    `;
+            <td>
+              ${item.quantity}
+              ${item.unit}
+            </td>
 
 
-  // Purchase item dropdown
-  document.querySelector('#purchaseItem').innerHTML =
-    state.inventory
-      .map(i =>
-        `<option>${i.name}</option>`
+            <td>
+              ${money(item.cost)}
+            </td>
+
+
+            <!-- ISSUE #15 -->
+
+            <td>
+              ${getExpiryStatus(
+                item.expiryDate
+              )}
+            </td>
+
+
+            <td>
+
+              <span
+                class="badge ${
+                  item.quantity <=
+                  item.threshold
+                    ? 'low'
+                    : ''
+                }"
+              >
+
+                ${
+                  item.quantity <=
+                  item.threshold
+                    ? 'Low stock'
+                    : 'In stock'
+                }
+
+              </span>
+
+            </td>
+
+
+            <td>
+
+              <button
+                class="icon-button"
+                title="Edit ${item.name}"
+                data-edit="${item.id}"
+              >
+                Edit
+              </button>
+
+
+              <button
+                class="icon-button"
+                title="Delete ${item.name}"
+                data-delete="${item.id}"
+              >
+                ×
+              </button>
+
+            </td>
+
+          </tr>
+
+        `
       )
-      .join('');
+      .join('')
+
+      ||
+
+      `
+
+        <tr>
+
+          <td
+            colspan="6"
+            class="empty"
+          >
+            No matching ingredients.
+          </td>
+
+        </tr>
+
+      `;
+
+
+  // ====================================
+  // RECIPES
+  // ====================================
+
+  document
+    .querySelector(
+      '#recipeCards'
+    )
+    .innerHTML =
+
+      state.recipes.map(
+        recipe => {
+
+          const cost =
+            recipeCost(recipe);
+
+
+          const food =
+            cost /
+            recipe.price *
+            100;
+
+
+          return `
+
+            <article class="recipe">
+
+              <div class="recipe-title">
+
+                <h3>
+                  ${recipe.name}
+                </h3>
+
+
+                <button
+                  class="icon-button"
+                  title="Remove ${recipe.name}"
+                  data-delete-recipe="${recipe.id}"
+                >
+                  ×
+                </button>
+
+              </div>
+
+
+              <span class="cost">
+                ${money(cost)}
+              </span>
+
+
+              <small>
+                per serving
+              </small>
+
+
+              <p>
+
+                Menu price
+                ${money(recipe.price)}
+                ·
+                Food cost
+                ${food.toFixed(1)}%
+
+              </p>
+
+
+              <div class="meter">
+
+                <i
+                  style="
+                    width:
+                    ${Math.min(food, 100)}%
+                  "
+                ></i>
+
+              </div>
+
+
+              <p>
+
+                ${
+                  recipe.ingredients
+
+                    .map(
+                      ingredient =>
+
+                        `${ingredient.qty} ${
+                          findItem(
+                            ingredient.name
+                          )?.unit || ''
+                        } ${ingredient.name}`
+
+                    )
+
+                    .join(' · ')
+                }
+
+              </p>
+
+            </article>
+
+          `;
+
+        }
+      )
+      .join('')
+
+      ||
+
+      `
+
+        <p class="empty">
+          No recipes yet.
+        </p>
+
+      `;
+
+
+  // ====================================
+  // PURCHASES
+  // ====================================
+
+  document
+    .querySelector(
+      '#purchaseList'
+    )
+    .innerHTML =
+
+      state.purchases
+
+        .slice()
+
+        .reverse()
+
+        .map(
+          purchase => `
+
+            <article class="purchase">
+
+              <span class="purchase-date">
+                ${purchase.date}
+              </span>
+
+
+              <div>
+
+                <b>
+
+                  ${purchase.item}
+                  ·
+                  ${purchase.quantity}
+                  ${
+                    findItem(
+                      purchase.item
+                    )?.unit ||
+                    'units'
+                  }
+
+                </b>
+
+
+                <small>
+
+                  ${purchase.supplier}
+                  ·
+                  ${money(
+                    purchase.cost
+                  )}
+                  per unit
+
+                </small>
+
+              </div>
+
+
+              <span class="amount">
+
+                ${money(
+                  purchase.quantity *
+                  purchase.cost
+                )}
+
+              </span>
+
+            </article>
+
+          `
+        )
+        .join('')
+
+      ||
+
+      `
+
+        <p class="empty">
+          No purchases logged.
+        </p>
+
+      `;
+
+
+  // PURCHASE DROPDOWN
+
+  document
+    .querySelector(
+      '#purchaseItem'
+    )
+    .innerHTML =
+
+      state.inventory
+        .map(
+          item =>
+            `<option>${item.name}</option>`
+        )
+        .join('');
+
 }
 
 
-// -------------------------
-// CHAT ASSISTANT
-// -------------------------
+// ======================================
+// CHAT
+// ======================================
 
-function addChat(text, type = 'bot') {
+function addChat(
+  text,
+  type = 'bot'
+) {
 
-  const el = document.createElement('div');
+  const element =
+    document.createElement(
+      'div'
+    );
 
-  el.className = `${type}-message`;
-  el.textContent = text;
+
+  element.className =
+    `${type}-message`;
+
+
+  element.textContent =
+    text;
+
 
   document
-    .querySelector('#chatLog')
-    .append(el);
+    .querySelector(
+      '#chatLog'
+    )
+    .append(element);
 
-  el.parentElement.scrollTop =
-    el.parentElement.scrollHeight;
+
+  element.parentElement.scrollTop =
+    element.parentElement
+      .scrollHeight;
+
 }
 
 
 function handleAssistant(raw) {
 
-  const text = raw.trim();
-  const lower = text.toLowerCase();
+  const text =
+    raw.trim();
+
+
+  const lower =
+    text.toLowerCase();
+
 
   if (!text) return;
 
-  addChat(text, 'user');
+
+  addChat(
+    text,
+    'user'
+  );
 
 
   // LOW STOCK
+
   if (
-    /low stock|low-stock|needs attention/.test(lower)
+    /low stock|low-stock|needs attention/
+      .test(lower)
   ) {
 
-    const low = state.inventory.filter(
-      i => i.quantity <= i.threshold
-    );
+    const low =
+      state.inventory.filter(
+        item =>
+          item.quantity <=
+          item.threshold
+      );
+
 
     addChat(
+
       low.length
+
         ? `Low stock: ${
             low.map(
-              i =>
-                `${i.name} (${i.quantity} ${i.unit}, reorder at ${i.threshold})`
-            ).join('; ')
+              item =>
+                `${item.name} (${item.quantity} ${item.unit}, reorder at ${item.threshold})`
+            )
+            .join('; ')
           }.`
+
         : 'Everything is above its reorder level.'
+
     );
 
+
     return;
+
   }
 
 
-  // RECIPE COST
-  if (/cost|food cost/.test(lower)) {
+  // COST
 
-    const requested = lower
-      .replace(
-        /calculate|what(?:'s| is)|the|cost|of|food/gi,
-        ''
-      )
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+  if (
+    /cost|food cost/
+      .test(lower)
+  ) {
 
+    const requested =
+      lower
 
-    const match = state.recipes.find(
-      r =>
-        requested.every(
-          word =>
-            r.name
-              .toLowerCase()
-              .includes(word)
+        .replace(
+          /calculate|what(?:'s| is)|the|cost|of|food/gi,
+          ''
         )
-    );
+
+        .trim()
+
+        .split(/\s+/)
+
+        .filter(Boolean);
+
+
+    const match =
+      state.recipes.find(
+        recipe =>
+
+          requested.every(
+            word =>
+              recipe.name
+                .toLowerCase()
+                .includes(word)
+          )
+
+      );
 
 
     if (match) {
 
-      const cost = recipeCost(match);
+      const cost =
+        recipeCost(match);
+
 
       addChat(
-        `${match.name} costs ${money(cost)} per serving. ` +
+
+        `${match.name} costs ` +
+        `${money(cost)} per serving. ` +
         `At a ${money(match.price)} menu price, ` +
-        `food cost is ${(cost / match.price * 100).toFixed(1)}%.`
+        `food cost is ` +
+        `${(
+          cost /
+          match.price *
+          100
+        ).toFixed(1)}%.`
+
       );
 
     } else {
 
       addChat(
-        `I couldn't match a recipe. Available recipes: ` +
-        `${state.recipes.map(r => r.name).join(', ')}.`
+
+        `I couldn't match a recipe. ` +
+        `Available recipes: ` +
+        `${state.recipes
+          .map(
+            recipe =>
+              recipe.name
+          )
+          .join(', ')}.`
+
       );
+
     }
 
+
     return;
+
   }
 
 
-  // ADD INVENTORY / PURCHASE
-  const purchase = lower.match(
-    /(?:record )?purchase\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)(?:\s+from\s+(.+))?$/
-  );
+  // PURCHASE COMMAND
+
+  const purchase =
+    lower.match(
+      /(?:record )?purchase\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)(?:\s+from\s+(.+))?$/
+    );
 
 
-  const add = lower.match(
-    /add\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)$/
-  );
+  // ADD COMMAND
+
+  const add =
+    lower.match(
+      /add\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)$/
+    );
 
 
-  const parsed = purchase || add;
+  const parsed =
+    purchase || add;
 
 
   if (parsed) {
@@ -522,166 +940,219 @@ function handleAssistant(raw) {
     ] = parsed;
 
 
-    let item = findItem(name);
+    let item =
+      findItem(name);
 
 
     if (!item) {
 
       item = {
+
         id: Date.now(),
 
-        name: name.replace(
-          /\b\w/g,
-          c => c.toUpperCase()
-        ),
+        name:
+          name.replace(
+            /\b\w/g,
+            character =>
+              character.toUpperCase()
+          ),
 
         quantity: 0,
 
         unit,
 
-        cost: Number(cost),
+        cost:
+          Number(cost),
 
         threshold:
-          Number(quantity) / 2
+          Number(quantity) / 2,
+
+        // No expiry supplied through
+        // assistant command.
+        expiryDate: ''
+
       };
 
 
-      state.inventory.push(item);
+      state.inventory.push(
+        item
+      );
+
     }
 
 
-    item.quantity += Number(quantity);
+    item.quantity +=
+      Number(quantity);
 
-    item.cost = Number(cost);
+
+    item.cost =
+      Number(cost);
 
 
     if (purchase) {
 
       state.purchases.push({
+
         id: Date.now(),
 
-        date: new Date()
-          .toISOString()
-          .slice(0, 10),
+        date:
+          new Date()
+            .toISOString()
+            .slice(0, 10),
 
-        item: item.name,
+        item:
+          item.name,
 
-        quantity: Number(quantity),
+        quantity:
+          Number(quantity),
 
-        cost: Number(cost),
+        cost:
+          Number(cost),
 
         supplier:
           supplier ||
           'Unspecified supplier'
+
       });
+
     }
 
 
     save();
+
     render();
 
 
     addChat(
+
       `${
         purchase
           ? 'Purchase recorded'
           : 'Inventory updated'
-      }: ${quantity} ${unit} ${item.name} at ${money(cost)} each.`
+      }: ` +
+      `${quantity} ${unit} ` +
+      `${item.name} at ` +
+      `${money(cost)} each.`
+
     );
 
+
     return;
+
   }
 
 
   addChat(
-    'I can help with low stock, recipe costs, adding inventory, and recording purchases. Try one of the example commands below.'
+    'I can help with low stock, recipe costs, adding inventory, and recording purchases.'
   );
+
 }
 
 
-// -------------------------
-// OPEN DIALOG BUTTONS
-// -------------------------
+// ======================================
+// OPEN DIALOGS
+// ======================================
 
 document
-  .querySelectorAll('[data-open]')
-  .forEach(button => {
+  .querySelectorAll(
+    '[data-open]'
+  )
+  .forEach(
+    button => {
 
-    button.addEventListener(
-      'click',
-      () => {
+      button.addEventListener(
+        'click',
+        () => {
 
-        document
-          .querySelector(
-            `#${button.dataset.open}`
-          )
-          .showModal();
-      }
-    );
-  });
+          document
+            .querySelector(
+              `#${button.dataset.open}`
+            )
+            .showModal();
+
+        }
+      );
+
+    }
+  );
 
 
-// -------------------------
-// INVENTORY SEARCH
-// -------------------------
+// ======================================
+// SEARCH
+// ======================================
 
 document
-  .querySelector('#inventorySearch')
+  .querySelector(
+    '#inventorySearch'
+  )
   .addEventListener(
     'input',
     render
   );
 
 
-// -------------------------
-// INVENTORY FILTER
-// -------------------------
+// ======================================
+// FILTER
+// ======================================
 
 document
-  .querySelectorAll('.chip')
-  .forEach(button => {
+  .querySelectorAll(
+    '.chip'
+  )
+  .forEach(
+    button => {
 
-    button.addEventListener(
-      'click',
-      () => {
+      button.addEventListener(
+        'click',
+        () => {
 
-        activeFilter =
-          button.dataset.filter;
+          activeFilter =
+            button.dataset.filter;
 
 
-        document
-          .querySelectorAll('.chip')
-          .forEach(x =>
-            x.classList.toggle(
-              'active',
-              x === button
+          document
+            .querySelectorAll(
+              '.chip'
             )
-          );
+            .forEach(
+              chip =>
+
+                chip.classList.toggle(
+                  'active',
+                  chip === button
+                )
+
+            );
 
 
-        render();
-      }
-    );
-  });
+          render();
+
+        }
+      );
+
+    }
+  );
 
 
-// =========================================
-// INVENTORY EDIT + DELETE
-// ISSUE #14
-// =========================================
+// ======================================
+// #14 INVENTORY EDITING
+// + #15 EXPIRY FIELD
+// ======================================
 
 document
-  .querySelector('#inventoryRows')
+  .querySelector(
+    '#inventoryRows'
+  )
   .addEventListener(
     'click',
     event => {
 
 
-      // -------------------------
       // EDIT ITEM
-      // -------------------------
 
-      if (event.target.dataset.edit) {
+      if (
+        event.target.dataset.edit
+      ) {
 
         const id =
           Number(
@@ -691,7 +1162,8 @@ document
 
         const item =
           state.inventory.find(
-            i => i.id === id
+            item =>
+              item.id === id
           );
 
 
@@ -704,43 +1176,53 @@ document
           );
 
 
-        // Put current item information
-        // into the edit form
         form.elements.id.value =
           item.id;
+
 
         form.elements.name.value =
           item.name;
 
+
         form.elements.quantity.value =
           item.quantity;
+
 
         form.elements.unit.value =
           item.unit;
 
+
         form.elements.cost.value =
           item.cost;
+
 
         form.elements.threshold.value =
           item.threshold;
 
 
-        // Open edit window
+        // ISSUE #15
+
+        form.elements.expiryDate.value =
+          item.expiryDate || '';
+
+
         document
           .querySelector(
             '#editInventoryDialog'
           )
           .showModal();
 
+
         return;
+
       }
 
 
-      // -------------------------
       // DELETE ITEM
-      // -------------------------
 
-      if (event.target.dataset.delete) {
+      if (
+        event.target.dataset.delete
+      ) {
 
         const id =
           Number(
@@ -750,24 +1232,29 @@ document
 
         state.inventory =
           state.inventory.filter(
-            i => i.id !== id
+            item =>
+              item.id !== id
           );
 
 
         save();
+
         render();
+
       }
+
     }
   );
 
 
-// =========================================
-// SAVE EDITED INVENTORY ITEM
-// ISSUE #14
-// =========================================
+// ======================================
+// SAVE EDITED ITEM
+// ======================================
 
 document
-  .querySelector('#editInventoryForm')
+  .querySelector(
+    '#editInventoryForm'
+  )
   .addEventListener(
     'submit',
     event => {
@@ -775,7 +1262,8 @@ document
       event.preventDefault();
 
 
-      const form = event.target;
+      const form =
+        event.target;
 
 
       const id =
@@ -786,59 +1274,78 @@ document
 
       const item =
         state.inventory.find(
-          i => i.id === id
+          item =>
+            item.id === id
         );
 
 
       if (!item) return;
 
 
-      // Update existing item
       item.name =
-        form.elements.name.value.trim();
+        form.elements.name
+          .value
+          .trim();
+
 
       item.quantity =
         Number(
-          form.elements.quantity.value
+          form.elements.quantity
+            .value
         );
 
+
       item.unit =
-        form.elements.unit.value.trim();
+        form.elements.unit
+          .value
+          .trim();
+
 
       item.cost =
         Number(
-          form.elements.cost.value
+          form.elements.cost
+            .value
         );
+
 
       item.threshold =
         Number(
-          form.elements.threshold.value
+          form.elements.threshold
+            .value
         );
 
 
-      // Save changes
+      // ISSUE #15:
+      // Save edited expiry date.
+
+      item.expiryDate =
+        form.elements.expiryDate
+          .value;
+
+
       save();
 
-      // Refresh screen
       render();
 
 
-      // Close edit dialog
       document
         .querySelector(
           '#editInventoryDialog'
         )
         .close();
+
     }
   );
 
 
-// -------------------------
-// ADD NEW INVENTORY ITEM
-// -------------------------
+// ======================================
+// ADD INVENTORY
+// ======================================
 
 document
-  .querySelector('#inventoryForm')
+  .querySelector(
+    '#inventoryForm'
+  )
   .addEventListener(
     'submit',
     event => {
@@ -846,31 +1353,49 @@ document
       event.preventDefault();
 
 
-      const d =
+      const data =
         Object.fromEntries(
-          new FormData(event.target)
+          new FormData(
+            event.target
+          )
         );
 
 
       state.inventory.push({
+
         id: Date.now(),
 
-        name: d.name,
+        name:
+          data.name.trim(),
 
         quantity:
-          Number(d.quantity),
+          Number(
+            data.quantity
+          ),
 
-        unit: d.unit,
+        unit:
+          data.unit.trim(),
 
         cost:
-          Number(d.cost),
+          Number(
+            data.cost
+          ),
 
         threshold:
-          Number(d.threshold)
+          Number(
+            data.threshold
+          ),
+
+        // ISSUE #15
+
+        expiryDate:
+          data.expiryDate
+
       });
 
 
       save();
+
       render();
 
 
@@ -880,16 +1405,21 @@ document
 
 
       event.target.reset();
+
     }
   );
 
 
-// -------------------------
-// ADD RECIPE
-// -------------------------
+// ======================================
+// RECIPE
+// Current behavior preserved.
+// #16 WILL BE DONE NEXT.
+// ======================================
 
 document
-  .querySelector('#recipeForm')
+  .querySelector(
+    '#recipeForm'
+  )
   .addEventListener(
     'submit',
     event => {
@@ -897,79 +1427,120 @@ document
       event.preventDefault();
 
 
-      const d =
+      const data =
         Object.fromEntries(
-          new FormData(event.target)
+          new FormData(
+            event.target
+          )
         );
 
 
       const ingredients =
-        d.ingredients
+        data.ingredients
+
           .split(',')
-          .map(value => {
 
-            const [name, qty] =
-              value
-                .trim()
-                .split(':');
+          .map(
+            value => {
+
+              const [
+                name,
+                quantity
+              ] =
+                value
+                  .trim()
+                  .split(':');
 
 
-            return {
-              name: name.trim(),
-              qty: Number(qty)
-            };
-          })
+              return {
+
+                name:
+                  name.trim(),
+
+                qty:
+                  Number(quantity)
+
+              };
+
+            }
+          )
+
           .filter(
-            x =>
-              x.name &&
-              !Number.isNaN(x.qty)
+            ingredient =>
+
+              ingredient.name &&
+
+              !Number.isNaN(
+                ingredient.qty
+              )
+
           );
 
 
       const missing =
         ingredients
+
           .filter(
-            x =>
-              !findItem(x.name)
+            ingredient =>
+              !findItem(
+                ingredient.name
+              )
           )
+
           .map(
-            x => x.name
+            ingredient =>
+              ingredient.name
           );
 
 
-      if (!ingredients.length) {
+      if (
+        !ingredients.length
+      ) {
 
         alert(
           'Add at least one ingredient using the format Item name:quantity.'
         );
 
         return;
+
       }
 
 
-      if (missing.length) {
+      if (
+        missing.length
+      ) {
 
         alert(
+
           `Add these items to Inventory Counts first, or correct their spelling: ${missing.join(', ')}.`
+
         );
 
+
         return;
+
       }
 
 
       state.recipes.push({
+
         id: Date.now(),
 
-        name: d.name,
+        name:
+          data.name,
 
         price:
-          Number(d.price),
+          Number(
+            data.price
+          ),
 
         ingredients
+
       });
 
 
       save();
+
       render();
 
 
@@ -979,49 +1550,60 @@ document
 
 
       event.target.reset();
+
     }
   );
 
 
-// -------------------------
+// ======================================
 // DELETE RECIPE
-// -------------------------
+// ======================================
 
 document
-  .querySelector('#recipeCards')
+  .querySelector(
+    '#recipeCards'
+  )
   .addEventListener(
     'click',
     event => {
 
       if (
-        event.target.dataset.deleteRecipe
+        event.target.dataset
+          .deleteRecipe
       ) {
 
         const id =
           Number(
-            event.target.dataset.deleteRecipe
+            event.target.dataset
+              .deleteRecipe
           );
 
 
         state.recipes =
           state.recipes.filter(
-            r => r.id !== id
+            recipe =>
+              recipe.id !== id
           );
 
 
         save();
+
         render();
+
       }
+
     }
   );
 
 
-// -------------------------
-// RECORD PURCHASE
-// -------------------------
+// ======================================
+// PURCHASE
+// ======================================
 
 document
-  .querySelector('#purchaseForm')
+  .querySelector(
+    '#purchaseForm'
+  )
   .addEventListener(
     'submit',
     event => {
@@ -1029,24 +1611,37 @@ document
       event.preventDefault();
 
 
-      const d =
+      const data =
         Object.fromEntries(
-          new FormData(event.target)
+          new FormData(
+            event.target
+          )
         );
 
 
       const item =
-        findItem(d.item);
+        findItem(
+          data.item
+        );
+
+
+      if (!item) return;
 
 
       item.quantity +=
-        Number(d.quantity);
+        Number(
+          data.quantity
+        );
+
 
       item.cost =
-        Number(d.cost);
+        Number(
+          data.cost
+        );
 
 
       state.purchases.push({
+
         id: Date.now(),
 
         date:
@@ -1054,20 +1649,27 @@ document
             .toISOString()
             .slice(0, 10),
 
-        item: d.item,
+        item:
+          data.item,
 
         quantity:
-          Number(d.quantity),
+          Number(
+            data.quantity
+          ),
 
         cost:
-          Number(d.cost),
+          Number(
+            data.cost
+          ),
 
         supplier:
-          d.supplier
+          data.supplier
+
       });
 
 
       save();
+
       render();
 
 
@@ -1077,16 +1679,19 @@ document
 
 
       event.target.reset();
+
     }
   );
 
 
-// -------------------------
-// ASSISTANT FORM
-// -------------------------
+// ======================================
+// ASSISTANT
+// ======================================
 
 document
-  .querySelector('#assistantForm')
+  .querySelector(
+    '#assistantForm'
+  )
   .addEventListener(
     'submit',
     event => {
@@ -1106,34 +1711,40 @@ document
 
 
       input.value = '';
+
     }
   );
 
 
-// -------------------------
-// ASSISTANT PROMPT BUTTONS
-// -------------------------
+document
+  .querySelectorAll(
+    '[data-prompt]'
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        'click',
+        () =>
+
+          handleAssistant(
+            button.dataset.prompt
+          )
+
+      );
+
+    }
+  );
+
+
+// ======================================
+// RESET
+// ======================================
 
 document
-  .querySelectorAll('[data-prompt]')
-  .forEach(button => {
-
-    button.addEventListener(
-      'click',
-      () =>
-        handleAssistant(
-          button.dataset.prompt
-        )
-    );
-  });
-
-
-// -------------------------
-// RESET DEMO DATA
-// -------------------------
-
-document
-  .querySelector('#resetButton')
+  .querySelector(
+    '#resetButton'
+  )
   .addEventListener(
     'click',
     () => {
@@ -1147,15 +1758,19 @@ document
         state =
           structuredClone(seed);
 
+
         save();
+
         render();
+
       }
+
     }
   );
 
 
-// -------------------------
-// INITIAL RENDER
-// -------------------------
+// ======================================
+// START
+// ======================================
 
 render();
