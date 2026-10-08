@@ -45,8 +45,9 @@ function validateRecipeIngredients(
 
 
       // Check whether enough inventory exists
+      // Placed bug by changing from > to >= to test failure case
       if (
-        ingredient.qty >
+        ingredient.qty >=
         item.quantity
       ) {
 
