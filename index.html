@@ -173,10 +173,7 @@
                 <th>Item</th>
                 <th>On hand</th>
                 <th>Unit cost</th>
-
-                <!-- ISSUE #15 -->
                 <th>Expiry</th>
-
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -363,9 +360,7 @@
 </main>
 
 
-<!-- ====================================== -->
 <!-- ADD INVENTORY ITEM -->
-<!-- ====================================== -->
 
 <dialog id="inventoryDialog">
 
@@ -376,9 +371,7 @@
 
     <div class="modal-head">
 
-      <h2>
-        Add inventory item
-      </h2>
+      <h2>Add inventory item</h2>
 
       <button
         class="close"
@@ -463,8 +456,6 @@
       </label>
 
 
-      <!-- ISSUE #15: EXPIRY DATE -->
-
       <label>
 
         Expiry date
@@ -492,10 +483,7 @@
 </dialog>
 
 
-<!-- ====================================== -->
 <!-- EDIT INVENTORY ITEM -->
-<!-- #14 + EXPIRY DATE FROM #15 -->
-<!-- ====================================== -->
 
 <dialog id="editInventoryDialog">
 
@@ -506,9 +494,7 @@
 
     <div class="modal-head">
 
-      <h2>
-        Edit inventory item
-      </h2>
+      <h2>Edit inventory item</h2>
 
       <button
         class="close"
@@ -597,8 +583,6 @@
       </label>
 
 
-      <!-- ISSUE #15 -->
-
       <label>
 
         Expiry date
@@ -627,7 +611,7 @@
 
 
 <!-- ====================================== -->
-<!-- RECIPE -->
+<!-- RECIPE - ISSUE #16 -->
 <!-- ====================================== -->
 
 <dialog id="recipeDialog">
@@ -639,9 +623,7 @@
 
     <div class="modal-head">
 
-      <h2>
-        Add recipe
-      </h2>
+      <h2>Add recipe</h2>
 
       <button
         class="close"
@@ -690,7 +672,7 @@
         <input
           name="ingredients"
           required
-          placeholder="Chicken breast:0.5, Butter:0.1"
+          placeholder="Chicken breast:0.5, Tomatoes:0.2"
         />
 
       </label>
@@ -701,6 +683,8 @@
     <p class="help">
       Enter each ingredient as
       <code>Inventory item name:quantity</code>.
+      The ingredient and quantity will be checked
+      against your current inventory.
       Example:
       <code>Chicken breast:0.5, Tomatoes:0.2</code>.
     </p>
@@ -718,9 +702,7 @@
 </dialog>
 
 
-<!-- ====================================== -->
 <!-- PURCHASE -->
-<!-- ====================================== -->
 
 <dialog id="purchaseDialog">
 
@@ -731,9 +713,7 @@
 
     <div class="modal-head">
 
-      <h2>
-        Record supplier purchase
-      </h2>
+      <h2>Record supplier purchase</h2>
 
       <button
         class="close"
@@ -818,14 +798,13 @@
 
 
 <template id="emptyTemplate">
-
   <p class="empty">
     Nothing here yet.
   </p>
-
 </template>
 
 
+<script src="recipeValidation.js"></script>
 <script src="script.js"></script>
 
 </body>

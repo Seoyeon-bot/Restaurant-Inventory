@@ -1,0 +1,26 @@
+{
+  "name": "restaurant-inventory",
+  "version": "1.0.0",
+  "description": "Restaurant-Inventory is a small, original restaurant inventory-management toy project. It runs entirely in the browser—no server, database, build step, or API key is required. Data is stored in the browser's `localStorage`.",
+  "main": "script.js",
+  "directories": {
+    "test": "tests"
+  },
+ "scripts": {
+  "test": "jest --coverage"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seoyeon-bot/Restaurant-Inventory.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Seoyeon-bot/Restaurant-Inventory/issues"
+  },
+  "homepage": "https://github.com/Seoyeon-bot/Restaurant-Inventory#readme",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

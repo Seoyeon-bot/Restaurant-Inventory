@@ -1,4 +1,3 @@
-//Expiry-Tracking Feature Added
 const seed = {
 
   inventory: [
@@ -200,14 +199,11 @@ function recipeCost(recipe) {
 
 
 // ======================================
-// ISSUE #15
-// EXPIRY TRACKING
+// #15 EXPIRY TRACKING
 // ======================================
 
 function getExpiryStatus(expiryDate) {
 
-  // Old inventory data may not have
-  // an expiry date yet.
   if (!expiryDate) {
 
     return 'No expiry date';
@@ -272,11 +268,19 @@ function getExpiryStatus(expiryDate) {
 
 
 // ======================================
+// #16 RECIPE INGREDIENT VALIDATION
+// ======================================
+
+function validateRecipeIngredients(ingredients) {
+  return RecipeValidation.validateRecipeIngredients(ingredients, findItem);
+}
+
+
+// ======================================
 // RENDER
 // ======================================
 
 function render() {
-
 
   const low =
     state.inventory.filter(
@@ -285,8 +289,6 @@ function render() {
         item.threshold
     );
 
-
-  // INVENTORY VALUE
 
   document
     .querySelector(
@@ -306,8 +308,6 @@ function render() {
       );
 
 
-  // LOW STOCK
-
   document
     .querySelector(
       '#lowStockCount'
@@ -315,8 +315,6 @@ function render() {
     .textContent =
       low.length;
 
-
-  // AVERAGE FOOD COST
 
   const avg =
     state.recipes.length
@@ -343,8 +341,6 @@ function render() {
     .textContent =
       `${avg.toFixed(1)}%`;
 
-
-  // PURCHASE TOTAL
 
   const month =
     new Date()
@@ -428,26 +424,20 @@ function render() {
               ${item.name}
             </td>
 
-
             <td>
               ${item.quantity}
               ${item.unit}
             </td>
 
-
             <td>
               ${money(item.cost)}
             </td>
-
-
-            <!-- ISSUE #15 -->
 
             <td>
               ${getExpiryStatus(
                 item.expiryDate
               )}
             </td>
-
 
             <td>
 
@@ -471,7 +461,6 @@ function render() {
 
             </td>
 
-
             <td>
 
               <button
@@ -481,7 +470,6 @@ function render() {
               >
                 Edit
               </button>
-
 
               <button
                 class="icon-button"
@@ -550,7 +538,6 @@ function render() {
                   ${recipe.name}
                 </h3>
 
-
                 <button
                   class="icon-button"
                   title="Remove ${recipe.name}"
@@ -565,7 +552,6 @@ function render() {
               <span class="cost">
                 ${money(cost)}
               </span>
-
 
               <small>
                 per serving
@@ -660,7 +646,6 @@ function render() {
                 ${purchase.date}
               </span>
 
-
               <div>
 
                 <b>
@@ -677,7 +662,6 @@ function render() {
 
                 </b>
 
-
                 <small>
 
                   ${purchase.supplier}
@@ -690,7 +674,6 @@ function render() {
                 </small>
 
               </div>
-
 
               <span class="amount">
 
@@ -717,8 +700,6 @@ function render() {
 
       `;
 
-
-  // PURCHASE DROPDOWN
 
   document
     .querySelector(
@@ -792,8 +773,6 @@ function handleAssistant(raw) {
   );
 
 
-  // LOW STOCK
-
   if (
     /low stock|low-stock|needs attention/
       .test(lower)
@@ -828,8 +807,6 @@ function handleAssistant(raw) {
 
   }
 
-
-  // COST
 
   if (
     /cost|food cost/
@@ -908,15 +885,11 @@ function handleAssistant(raw) {
   }
 
 
-  // PURCHASE COMMAND
-
   const purchase =
     lower.match(
       /(?:record )?purchase\s+(\d+(?:\.\d+)?)\s+(\w+)\s+(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)(?:\s+from\s+(.+))?$/
     );
 
-
-  // ADD COMMAND
 
   const add =
     lower.match(
@@ -967,8 +940,6 @@ function handleAssistant(raw) {
         threshold:
           Number(quantity) / 2,
 
-        // No expiry supplied through
-        // assistant command.
         expiryDate: ''
 
       };
@@ -1135,8 +1106,7 @@ document
 
 
 // ======================================
-// #14 INVENTORY EDITING
-// + #15 EXPIRY FIELD
+// #14 EDIT / DELETE INVENTORY
 // ======================================
 
 document
@@ -1147,8 +1117,6 @@ document
     'click',
     event => {
 
-
-      // EDIT ITEM
 
       if (
         event.target.dataset.edit
@@ -1200,8 +1168,6 @@ document
           item.threshold;
 
 
-        // ISSUE #15
-
         form.elements.expiryDate.value =
           item.expiryDate || '';
 
@@ -1217,8 +1183,6 @@ document
 
       }
 
-
-      // DELETE ITEM
 
       if (
         event.target.dataset.delete
@@ -1248,7 +1212,7 @@ document
 
 
 // ======================================
-// SAVE EDITED ITEM
+// SAVE INVENTORY EDIT
 // ======================================
 
 document
@@ -1314,9 +1278,6 @@ document
             .value
         );
 
-
-      // ISSUE #15:
-      // Save edited expiry date.
 
       item.expiryDate =
         form.elements.expiryDate
@@ -1386,8 +1347,6 @@ document
             data.threshold
           ),
 
-        // ISSUE #15
-
         expiryDate:
           data.expiryDate
 
@@ -1411,9 +1370,8 @@ document
 
 
 // ======================================
-// RECIPE
-// Current behavior preserved.
-// #16 WILL BE DONE NEXT.
+// ISSUE #16
+// ADD RECIPE + VALIDATE INGREDIENTS
 // ======================================
 
 document
@@ -1435,6 +1393,12 @@ document
         );
 
 
+      // Convert the ingredient text
+      // into ingredient objects.
+      //
+      // Example:
+      // Chicken breast:0.5, Tomatoes:0.2
+
       const ingredients =
         data.ingredients
 
@@ -1443,76 +1407,67 @@ document
           .map(
             value => {
 
-              const [
-                name,
-                quantity
-              ] =
+              const parts =
                 value
                   .trim()
                   .split(':');
 
 
+              // Invalid format
+              if (
+                parts.length !== 2
+              ) {
+
+                return {
+                  name: '',
+                  qty: NaN
+                };
+
+              }
+
+
               return {
 
                 name:
-                  name.trim(),
+                  parts[0]
+                    .trim(),
 
                 qty:
-                  Number(quantity)
+                  Number(
+                    parts[1]
+                      .trim()
+                  )
 
               };
 
             }
-          )
-
-          .filter(
-            ingredient =>
-
-              ingredient.name &&
-
-              !Number.isNaN(
-                ingredient.qty
-              )
-
           );
 
 
-      const missing =
-        ingredients
+      // Check formatting first.
 
-          .filter(
-            ingredient =>
-              !findItem(
-                ingredient.name
-              )
-          )
+      const invalidFormat =
+        ingredients.some(
+          ingredient =>
 
-          .map(
-            ingredient =>
-              ingredient.name
-          );
+            !ingredient.name ||
 
+            !Number.isFinite(
+              ingredient.qty
+            )
 
-      if (
-        !ingredients.length
-      ) {
-
-        alert(
-          'Add at least one ingredient using the format Item name:quantity.'
         );
 
-        return;
-
-      }
-
 
       if (
-        missing.length
+        !ingredients.length ||
+        invalidFormat
       ) {
 
         alert(
 
-          `Add these items to Inventory Counts first, or correct their spelling: ${missing.join(', ')}.`
+          'Please enter ingredients using this format:\n\n' +
+          'Chicken breast:0.5, Tomatoes:0.2'
 
         );
 
@@ -1521,13 +1476,46 @@ document
 
       }
 
+
+      // ==================================
+      // VALIDATE AGAINST INVENTORY
+      // ==================================
+
+      const problems =
+        validateRecipeIngredients(
+          ingredients
+        );
+
+
+      // If anything is wrong,
+      // do not create the recipe.
+
+      if (
+        problems.length > 0
+      ) {
+
+        alert(
+
+          'Recipe cannot be added:\n\n' +
+          problems.join('\n')
+
+        );
+
+
+        return;
+
+      }
+
+
+      // All validation passed.
+      // Save recipe.
 
       state.recipes.push({
 
         id: Date.now(),
 
         name:
-          data.name,
+          data.name.trim(),
 
         price:
           Number(

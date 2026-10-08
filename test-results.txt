@@ -1,0 +1,31 @@
+PASS tests/recipeValidation.test.js
+  Recipe ingredient validation
+    ✓ accepts sufficient inventory (2 ms)
+    ✓ reports insufficient inventory
+    ✓ reports a missing ingredient
+    ✓ accepts an exact quantity (1 ms)
+    ✓ rejects invalid quantity 0
+    ✓ rejects invalid quantity -2 (1 ms)
+    ✓ rejects invalid quantity NaN
+    ✓ rejects invalid quantity Infinity
+    ✓ rejects invalid quantity -Infinity (1 ms)
+    ✓ rejects invalid quantity "2"
+    ✓ rejects invalid quantity undefined
+    ✓ rejects invalid quantity null
+    ✓ returns all problems in ingredient order
+    ✓ checks missing ingredients before quantity, as the original does
+    ✓ accepts an empty list, as the original does (1 ms)
+    ✓ supports the existing case-insensitive inventory lookup
+    ✓ reads updated inventory and does not consume ingredients
+
+---------------------|---------|----------|---------|---------|-------------------
+File                 | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+---------------------|---------|----------|---------|---------|-------------------
+All files            |   94.11 |    91.66 |     100 |   94.11 |                   
+ recipeValidation.js |   94.11 |    91.66 |     100 |   94.11 | 73                
+---------------------|---------|----------|---------|---------|-------------------
+Test Suites: 1 passed, 1 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        0.689 s, estimated 1 s
+Ran all test suites.
